@@ -70,7 +70,7 @@ app.post('/', (req, res)=>{
     console.log(req.body);
     item = req.body.newItem;
 
-    if(req.body.list === 'W ork'){
+    if(req.body.list === 'Work'){
         workItems.push(item);
         res.redirect('/work');
     }else{
