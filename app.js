@@ -5,19 +5,19 @@ const mongoose = require('mongoose');
 
 mongoose.connect('mongodb://localhost:27017/todolistDB');
 
-
 const app = express();
 app.use(bodyParser.urlencoded({extended:true}))
 app.set("view engine", 'ejs')
-
 app.use(express.static('public'));
+
 app.listen(3000, ()=>{
     console.log('Server is running on port 3000');
 });
 
-// storing data with mongoose
 
-const itemsSchema = new mongoose.Schema({
+// creating Schemas 
+
+const itemSchema = new mongoose.Schema({
     name :{
         type: String,
         required: [true, 'left out name']
@@ -25,9 +25,29 @@ const itemsSchema = new mongoose.Schema({
     
 });  
 
+
+const listSchema = new mongoose.Schema({
+    name: String,
+    items: [itemSchema]
+});
+
 // model for schema
 
-const Item = mongoose.model('Item', itemsSchema);
+const Item = mongoose.model('Item', itemSchema);
+const List = mongoose.model('List', listSchema);
+
+// creating  default items 
+async function createItems(){
+    const data = await Item.create([
+        {
+            name: 'cook'
+        }, 
+        {
+            name: 'Bath'
+        }
+    ]);
+    return data;
+}
 
 
 
@@ -36,17 +56,11 @@ app.get('/', async(req, res)=>{
 
     let day = date.getDate();
     const defaultItems = await Item.find();
+    
 
     // handling multiple creation of decument on app ran
     if(defaultItems.length === 0){
-        await Item.create([
-            {
-                name: 'cook'
-            }, 
-            {
-                name: 'Bath'
-            }
-        ]);
+        createItems();
         res.redirect('/');
     }else{
         res.render('list', {
@@ -55,10 +69,6 @@ app.get('/', async(req, res)=>{
     
         });
     }
-   
-    
-    
-  
 
 });
 
@@ -74,25 +84,34 @@ app.post('/', async (req, res)=>{
 
     res.redirect('/');
 
-    // if(req.body.list === 'Work'){
-    //     workItems.push(item);
-    //     res.redirect('/work');
-    // }else{
+});
 
-    //     items.push(item);
-    //     res.redirect('/');
-    // }
-
+app.post('/delete', async (req, res)=>{
+    
+    const itemToDelete = req.body.checkBox
+    // console.log(itemToDelete);
+    await Item.findByIdAndDelete(itemToDelete);
+    res.redirect('/');
 });
 
 
-app.get('/work', (req, res)=>{
-    res.render('list', {
-        listTile: 'Work List',
-        items: workItems,
-        
+// work route
 
-    });
+app.get('/:paramName', async(req, res)=>{
+   const parsedParam = req.params.paramName
+
+   const list = await List.create({
+            name: parsedParam,
+            items: []
+ });
+
+ console.log(list);
+
+    // res.render('list', {
+    //     listTile: 'Work List',
+    //     items: [createItems()] 
+
+    // });
 });
 
 app.post('/work', (req, res)=>{
@@ -100,7 +119,3 @@ app.post('/work', (req, res)=>{
     workItems.push(item);
     res.redirect('/work', );
 });
-
-// app.request('/work')
-//     .get((req,res) => {})
-//     .post

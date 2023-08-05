@@ -6,18 +6,15 @@
         <h1><%= listTile %></h1>
     </div>
 <div class="box">
-    <!-- <% for( let i = 0; i < items.length; i++ ) { %>
-        <div class="item">
-            <input type="checkbox">
-            <p><%= items[i].name %></p>
-        </div>
-    <% } %> -->
+   
 
   <% items.forEach((item)=>{ %>
-    <div class="item">
-        <input type="checkbox">
-        <p><%= item.name %></p>
-    </div>
+    <form action="/delete" method="post">
+        <div class="item">
+            <input type="checkbox" value="<%= item._id %>" onchange="this.form.submit()" name="checkBox">
+            <p><%= item.name %></p>
+        </div>
+    </form>
  <% }) %>
      
 
@@ -32,7 +29,5 @@
 <%- include("footer") %>
 
         
-
-  
 </body>
 </html>
