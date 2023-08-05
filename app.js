@@ -1,6 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const date = require(__dirname + '/date.js') //local module
+const mongoose = require('mongoose');
+
+mongoose.connect('mongodb://localhost:27017/todolistDB');
 
 
 const app = express();
@@ -12,72 +15,73 @@ app.listen(3000, ()=>{
     console.log('Server is running on port 3000');
 });
 
-const items = ['Buy Food', 'Cook Food', 'Eat Food'];
-const workItems = [];
+// storing data with mongoose
 
-app.get('/', (req, res)=>{
+const itemsSchema = new mongoose.Schema({
+    name :{
+        type: String,
+        required: [true, 'left out name']
+    }, 
+    
+});  
 
-    // let today = new Date();
-    // let currentDay = today.getDay();
-    // let day = "";
+// model for schema
 
-    // switch (currentDay) {
-    //     case 0:
-    //         day = 'Sunday'; 
-    //         break;
-    //     case 1:
-    //         day = 'Monday'; 
-    //          break;
-    //      case 2:
-    //         day = 'Tuesday'; 
-    //         break;
-    //     case 3:
-    //         day = 'Wednesday'; 
-    //         break;
-    //      case 4:
-    //         day = 'Thursday'; 
-    //         break;
-    //     case 5:
-    //         day = 'Friday';
-    //         break;
-    //     case 6:
-    //         day = 'Saturday';
-        
-    //     default:
-    //         day = 'Invalid input!!';
-    //         break;
-    // }
+const Item = mongoose.model('Item', itemsSchema);
 
-    // if (today.getDay() === 6 || today.getDay() === 0) {
-    //     day = 'Weekend';
-    // }else{
-    //     day ='Weekday';
-    // } 
+
+
+
+app.get('/', async(req, res)=>{
 
     let day = date.getDate();
-    
-    
-    res.render('list', {
-        listTile : day,
-        items: items
+    const defaultItems = await Item.find();
 
-    });
+    // handling multiple creation of decument on app ran
+    if(defaultItems.length === 0){
+        await Item.create([
+            {
+                name: 'cook'
+            }, 
+            {
+                name: 'Bath'
+            }
+        ]);
+        res.redirect('/');
+    }else{
+        res.render('list', {
+            listTile : day,
+            items: defaultItems
+    
+        });
+    }
+   
+    
+    
+  
 
 });
 
-app.post('/', (req, res)=>{
+app.post('/', async (req, res)=>{
 
-    console.log(req.body);
-    item = req.body.newItem;
+    // getting parsed data 
+    const itemName = req.body.newItem;
 
-    if(req.body.list === 'Work'){
-        workItems.push(item);
-        res.redirect('/work');
-    }else{
+    // Putting the parsed data into collection
+    await Item.create({
+        name: itemName
+    })
 
-        items.push(item);
-        res.redirect('/');
-    }
+    res.redirect('/');
+
+    // if(req.body.list === 'Work'){
+    //     workItems.push(item);
+    //     res.redirect('/work');
+    // }else{
+
+    //     items.push(item);
+    //     res.redirect('/');
+    // }
 
 });
 
